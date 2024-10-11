@@ -95,19 +95,26 @@ def generate_launch_description():
     logging.debug('starting generate_launch_description')
     set_gazebo_env_vars()
     world_frame = 'world'
-
+    world_path = 'worlds/tenBySixteenRoom.world'
+    full_world_path = os.path.join(get_package_share_directory(package_name), world_path)
+    logging.info(f'world file: {full_world_path}')
     logging.debug('creating launch description')
     launch_description_items = [
         DeclareLaunchArgument(
             'world',
-            default_value=[get_package_share_directory(package_name), '/worlds/empty.world'],
+            default_value=full_world_path,
             description='Path to the Gazebo world file'
         ),
         LogInfo(msg='Launching gazebo.'),
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('gazebo_ros'), 'launch'), '/gazebo.launch.py']),
-                launch_arguments={'verbose': 'false', 'pause': 'false', 'world': LaunchConfiguration('world')}.items(),
-        )
+            PythonLaunchDescriptionSource(
+                [os.path.join(get_package_share_directory('gazebo_ros'), 'launch'), '/gazebo.launch.py']),
+                launch_arguments={
+                    'verbose': 'false',
+                    'pause': 'false',
+                    'world': LaunchConfiguration('world'),
+                    }.items(),
+        ),
     ]
     logging.debug("created base launch config, now appending stuff")
     delayed_start = TimerAction(
