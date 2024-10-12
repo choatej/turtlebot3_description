@@ -1,0 +1,25 @@
+name: ROS2 CI
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  lint:
+    name: Lint and Format
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        path: ros2_ws/src
+    - name: setup ROS2  
+      uses: ros-tooling/setup-ros@v0.7
+      with:
+        required-ros-distributions: iron
+    - name: Lint with ament
+          - uses: ros-tooling/action-ros-lint@v0.1.4
+      with:
+        linter: flake8
+        package-name: turtlebot3_description

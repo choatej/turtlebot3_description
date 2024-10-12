@@ -1,0 +1,25 @@
+name: Create Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Generate URDF files
+      run: |
+        colcon build --packages-select turtlebot3_description
+    - name: Archive URDF files
+      run: |
+        xacro urdf/turtlebot3_burger_urdf.xacro -o turtlebot3.urdf
+        stat turtlebot3.urdf      
+        tar -czvf turtlebot3_urdf.tar.gz install/turtlebot3_description/
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: turtlebot3_urdf.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
