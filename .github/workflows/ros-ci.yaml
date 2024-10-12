@@ -19,7 +19,7 @@ jobs:
       with:
         required-ros-distributions: iron
     - name: Lint with ament
-          - uses: ros-tooling/action-ros-lint@v0.1.4
+      uses: ros-tooling/action-ros-lint@v0.1.4
       with:
         linter: flake8
         package-name: turtlebot3_description
