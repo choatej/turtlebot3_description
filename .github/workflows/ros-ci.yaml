@@ -20,7 +20,8 @@ jobs:
             python3-colcon-common-extensions \
             python3-colcon-test-result \
             pip install colcon-lcov-result && \
-            pip install coverage
+            pip install coverage && \
+            pip install colcon-coveragepy-result
       - name: run CI
         uses: ros-tooling/action-ros-ci@v0.3
         with:
