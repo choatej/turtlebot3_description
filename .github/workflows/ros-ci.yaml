@@ -7,21 +7,21 @@ on:
       - main
 jobs:
   build_and_test:
-  runs-on: ubuntu-22.04
-  steps:  
-    - name: setuo ROS2
-      uses: ichiro-its/ros2-ws-action/setup@v1.0.0
-      with:
-        distro: rolling
-    - name: build project        
-      uses: ichiro-its/ros2-ws-action/build@v1.0.0
-    - name: run tests
-      uses: ichiro-its/ros2-ws-action/test@v1.0.0
-    - name: Lint with ament
-      uses: ros-tooling/action-ros-lint@v0.1
-      with:
-        linter: flake8
-        package-name: turtlebot3_description
+    runs-on: ubuntu-22.04
+    steps:  
+      - name: setuo ROS2
+        uses: ichiro-its/ros2-ws-action/setup@v1.0.0
+        with:
+          distro: rolling
+      - name: build project        
+        uses: ichiro-its/ros2-ws-action/build@v1.0.0
+      - name: run tests
+        uses: ichiro-its/ros2-ws-action/test@v1.0.0
+      - name: Lint with ament
+        uses: ros-tooling/action-ros-lint@v0.1
+        with:
+          linter: flake8
+          package-name: turtlebot3_description
 
   # lint:
   #   name: Lint and Format
