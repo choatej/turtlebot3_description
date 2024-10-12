@@ -10,10 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     container: ros-tooling/setup-ros-docker/setup-ros-docker-ubuntu-noble-ros-jazzy-ros-base
     steps:
-      - uses: ros-tooling/setup-ros@v0.7
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: setup ROS2
+        uses: ros-tooling/setup-ros@v0.7
         with:
+          required-ros-distributions: iron
+      - name: checkout code
+        uses: actions/checkout@v4
+      - name: run CI
       - uses: ros-tooling/action-ros-ci@v0.3
         with:
           package-name: turtlebot3_description
