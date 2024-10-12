@@ -6,37 +6,31 @@ on:
     branches:
       - main
 jobs:
-  build_and_test:
-    runs-on: ubuntu-22.04
-    steps:  
-      - name: setuo ROS2
-        uses: ichiro-its/ros2-ws-action/setup@v1.0.0
+  build-and-test:
+    runs-on: ubuntu-latest
+    container: ros-tooling/setup-ros-docker/setup-ros-docker-ubuntu-noble-ros-jazzy-ros-base
+    steps:
+      - uses: ros-tooling/setup-ros@v0.7
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          distro: iron
-      - name: build project        
-        uses: ichiro-its/ros2-ws-action/build@v1.0.0
-      - name: run tests
-        uses: ichiro-its/ros2-ws-action/test@v1.0.0
-      - name: Lint with ament
-        uses: ros-tooling/action-ros-lint@v0.1
+      - uses: ros-tooling/action-ros-ci@v0.3
         with:
-          linter: flake8
           package-name: turtlebot3_description
-
-  # lint:
-  #   name: Lint and Format
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
-  #     with:
-  #       path: ros2_ws/src
-  #   - name: setup ROS2  
-  #     uses: ros-tooling/setup-ros@v0.7
-  #     with:
-  #       required-ros-distributions: iron
-  #   - name: Lint with ament
-  #     uses: ros-tooling/action-ros-lint@v0.1
-  #     with:
-  #       linter: flake8
-  #       package-name: turtlebot3_description
+          target-ros2-distro: iron
+  lint_and_format:
+    name: Lint and Format
+    runs-on: ubuntu-latest
+    container: ros-tooling/setup-ros-docker/setup-ros-docker-ubuntu-noble-ros-jazzy-ros-base
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: setup ROS2  
+      uses: ros-tooling/setup-ros@v0.7
+      with:
+        required-ros-distributions: iron
+    - name: Lint with ament
+      uses: ros-tooling/action-ros-lint@v0.1
+      with:
+        linter: flake8
+        package-name: turtlebot3_description
