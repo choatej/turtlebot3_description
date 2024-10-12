@@ -17,7 +17,7 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v4
       - name: run CI
-      - uses: ros-tooling/action-ros-ci@v0.3
+        uses: ros-tooling/action-ros-ci@v0.3
         with:
           package-name: turtlebot3_description
           target-ros2-distro: iron
