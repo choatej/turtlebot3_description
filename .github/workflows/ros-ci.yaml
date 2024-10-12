@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    container: ros-tooling/setup-ros-docker/setup-ros-docker-ubuntu-noble-ros-jazzy-ros-base
+    container: ubuntu:jazzy
     steps:
       - name: setup ROS2
         uses: ros-tooling/setup-ros@v0.7
@@ -24,10 +24,10 @@ jobs:
   lint_and_format:
     name: Lint and Format
     runs-on: ubuntu-latest
-    container: ros-tooling/setup-ros-docker/setup-ros-docker-ubuntu-noble-ros-jazzy-ros-base
+    container: ubuntu:jazzy
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4        
     - name: setup ROS2  
       uses: ros-tooling/setup-ros@v0.7
       with:
