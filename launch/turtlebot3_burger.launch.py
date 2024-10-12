@@ -1,5 +1,6 @@
 import logging
 import os
+from os import PathLike
 import datetime
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -25,6 +26,13 @@ x = "0.0"
 y = "0.0"
 z = "0.0"
 
+def process_xacro_file(xacro_file: PathLike) -> str:
+    # convert XACRO file into URDF
+    logging.debug("parsing xacro doc")
+    doc = xacro.parse(open(xacro_file))
+    xacro.process_doc(doc)
+    return doc.toprettyxml(indent="    ")
+
 def set_gazebo_env_vars():
     gazebo_models_path = os.path.join(package_name, 'urdf')
     if 'GAZEBO_MODEL_PATH' in os.environ:
@@ -44,28 +52,20 @@ def set_gazebo_env_vars():
     logging.debug("GAZEBO PLUGINS PATH=="+str(os.environ["GAZEBO_PLUGIN_PATH"]))
 
 
-def process_xacro_file():
-    # convert XACRO file into URDF
-    logging.debug("parsing xacro doc")
-    doc = xacro.parse(open(xacro_file))
-    xacro.process_doc(doc)
-
-    # save for debugging
+def generate_robot_state_publisher_node():
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    urdf_text = process_xacro_file(xacro_file)
+    # save it for debugging
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     outfile_file = os.path.join("/tmp", f"{os.path.splitext(os.path.split(xacro_file)[-1])[0]}-{timestamp}.urdf")
     with open(outfile_file, 'w') as f:
-        f.write(doc.toprettyxml(indent="    "))
-    return doc.toxml()
+        f.write(urdf_text)
 
-
-
-def generate_robot_state_publisher_node():
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     return Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
-        parameters=[{'use_sim_time': use_sim_time, 'robot_description': process_xacro_file()}],
+        parameters=[{'use_sim_time': use_sim_time, 'robot_description': urdf_text}],
         output='screen'
     )
 
@@ -95,19 +95,26 @@ def generate_launch_description():
     logging.debug('starting generate_launch_description')
     set_gazebo_env_vars()
     world_frame = 'world'
-
+    world_path = 'worlds/tenBySixteenRoom.world'
+    full_world_path = os.path.join(get_package_share_directory(package_name), world_path)
+    logging.info(f'world file: {full_world_path}')
     logging.debug('creating launch description')
     launch_description_items = [
         DeclareLaunchArgument(
             'world',
-            default_value=[get_package_share_directory(package_name), '/worlds/empty.world'],
+            default_value=full_world_path,
             description='Path to the Gazebo world file'
         ),
         LogInfo(msg='Launching gazebo.'),
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([os.path.join(get_package_share_directory('gazebo_ros'), 'launch'), '/gazebo.launch.py']),
-                launch_arguments={'verbose': 'false', 'pause': 'false', 'world': LaunchConfiguration('world')}.items(),
-        )
+            PythonLaunchDescriptionSource(
+                [os.path.join(get_package_share_directory('gazebo_ros'), 'launch'), '/gazebo.launch.py']),
+                launch_arguments={
+                    'verbose': 'false',
+                    'pause': 'false',
+                    'world': LaunchConfiguration('world'),
+                    }.items(),
+        ),
     ]
     logging.debug("created base launch config, now appending stuff")
     delayed_start = TimerAction(
