@@ -7,6 +7,7 @@ import xacro
 from ament_index_python.packages import get_package_prefix
 from ament_index_python.packages import get_package_share_directory
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, TimerAction
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -26,6 +27,41 @@ xacro_file = os.path.join(robot_model_path, 'urdf', base_xacro_file)
 x = '0.0'
 y = '0.0'
 z = '0.0'
+
+use_sim_time_arg = DeclareLaunchArgument(
+    'use_sim_time',
+    default_value='false',
+    description='Use simulation (sim) time'
+)
+
+start_gazebo_arg = DeclareLaunchArgument(
+    'start_gazebo',
+    default_value='false',
+    description='Launch Gazebo simulation'
+)
+
+start_rviz_arg = DeclareLaunchArgument(
+    'start_rviz',
+    default_value='false',
+    description='Launch RViz'
+)
+
+teleop_type_arg = DeclareLaunchArgument(
+    'teleop_type',
+    default_value='none',
+    description='Start teleop node. Values are keyboard, joystick, or none'
+)
+
+# Get launch configurations
+use_sim_time = LaunchConfiguration('use_sim_time')
+start_gazebo = LaunchConfiguration('start_gazebo')
+start_rviz = LaunchConfiguration('start_rviz')
+teleop_type = LaunchConfiguration('teleop_type')
+
+
+def validate_teleop_type(teleop_type: str) -> None:
+    if teleop_type not in ['keyboard', 'joystick', 'none']:
+        raise ValueError('Invalid teleop_type. Must be one of: keyboard, joystick, none')
 
 
 def process_xacro_file(xacro_file: PathLike) -> str:
@@ -54,7 +90,6 @@ def set_gazebo_env_vars():
 
 
 def generate_robot_state_publisher_node():
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     urdf_text = process_xacro_file(xacro_file)
     # save it for debugging
     timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
@@ -69,13 +104,15 @@ def generate_robot_state_publisher_node():
 def generate_robot_spawn():
     logging.debug('robot spawn topic is robot_description')
     return Node(name='spawn_entity', package='gazebo_ros', executable='spawn_entity.py',
-                arguments=['-entity', robot_name, '-x', x, '-y', y, '-z', z, '-topic', 'robot_description'])
+                arguments=['-entity', robot_name, '-x', x, '-y', y, '-z', z, '-topic', 'robot_description'],
+                parmeters=[{'use_sim_time': use_sim_time}], output='screen')
 
 
-def genrate_static_transform_publisher_node(world_frame):
+def generate_static_transform_publisher_node(world_frame):
     logging.debug('creating static transform')
     return Node(package='tf2_ros', executable='static_transform_publisher', name='static_transform_publisher_odom',
-                output='screen', emulate_tty=True, arguments=[x, y, z, '0', '0', '0', world_frame, 'base_link'])
+                output='screen', emulate_tty=True, arguments=[x, y, z, '0', '0', '0', world_frame, 'base_link'],
+                parameters=[{'use_sim_time': use_sim_time}])
 
 
 def generate_launch_description():
@@ -88,10 +125,12 @@ def generate_launch_description():
     logging.debug('creating launch description')
     launch_description_items = [
         DeclareLaunchArgument('world', default_value=full_world_path, description='Path to the Gazebo world file'),
-        LogInfo(msg='Launching gazebo.'), IncludeLaunchDescription(PythonLaunchDescriptionSource(
+        LogInfo(msg='Launching gazebo.'),
+        IncludeLaunchDescription(PythonLaunchDescriptionSource(
             [os.path.join(get_package_share_directory('gazebo_ros'), 'launch'), '/gazebo.launch.py']),
             launch_arguments={'verbose': 'false', 'pause': 'false',
-                              'world': LaunchConfiguration('world'), }.items(), ), ]
+                              'world': LaunchConfiguration('world'), }.items(),
+            condition=IfCondition(start_gazebo)), ]
     logging.debug('created base launch config, now appending stuff')
     delayed_start = TimerAction(actions=[], period=5.0)
     launch_description_items.append(LogInfo(msg='Gazebo started. Launching robot nodes.'))
