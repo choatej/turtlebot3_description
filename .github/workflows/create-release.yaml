@@ -9,30 +9,41 @@ on:
   push:
     tags:
       - 'v*.*.*'
-
+env:
+  urdf_file_path: urdf/turtlebot3_burger.urdf.xacro
 jobs:
-  get_tag:
+  get_derived_names:
     outputs:
-        tag: ${{ steps.get_tag.outputs.tag }}
+        tag: ${{ steps.derive_names.outputs.tag }}
+        repo_name: ${{ steps.derive_names.outputs.repo_name }}
+        urdf_source_file_path: src/${{ steps.derive_names.outputs.repo_name }}/${{ env.urdf_file_name }}
+        urdf_artifact_file: ${{ steps.derive_names.outputs.urdf_artifact_file }}
+        urdf_artifact_key: ${{ steps.derive_names.outputs.urdf_artifact_key }}
+        docker_artifact_key: ${{ steps.derive_names.outputs.docker_artifact_key }}
+        docker_image_name: ${{ steps.derive_names.outputs.repo_name }}
+        docker_image_file: ${{ steps.derive_names.outputs.docker_image_file }}
     runs-on: ubuntu-latest
     steps:
-      - name: Get the tag
-        id: get_tag
+      - name: Derive Names
+        id: derive_names
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           else
             echo "tag=v0.0.0" >> $GITHUB_OUTPUT
           fi
+          
+          repo_name=$(echo ${GITHUB_REPOSITORY} | tr '/' '-')
+          echo "repo_name=${repo_name}" >> $GITHUB_OUTPUT
+          
+          echo "urdf_artifact_file=${repo_name}_urdf.tar.gz" >> $GITHUB_OUTPUT
+          echo "urdf_artifact_key=${repo_name}_urdf" >> $GITHUB_OUTPUT
+          echo "docker_artifact_key=${repo_name}_docker" >> $GITHUB_OUTPUT
+          echo "docker_image_file=${{ github.repository_owner }}-${repo_name}_${tag}_docker.tar" >> $GITHUB_OUTPUT
   generate_urdf:
     runs-on: ubuntu-latest
+    needs: [get_derived_names]
     container: ros:iron
-    outputs:
-        artifact_key: ${{ env.artifact_key }}
-        artifact_file: ${{ env.artifact_file }}
-    env:
-        artifact_key: turtlebot3_urdf
-        artifact_file: turtlebot3_urdf.tar.gz
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -44,73 +55,56 @@ jobs:
       shell: bash
       run: |
         source /opt/ros/iron/setup.bash
-        colcon build --packages-select turtlebot3_description
+        colcon build --packages-select ${{ needs.get_derived_names.outputs.repo_name }}
         source ./install/setup.bash
-        xacro src/turtlebot3_description/urdf/turtlebot3_burger.urdf.xacro -o turtlebot3.urdf
-        tar -czvf ${artifact_file} install/turtlebot3_description/
+        xacro ${{ needs.get_derived_names.outputs.urdf_source_file_path }} -o ${{ needs.get_derived_names.outputs.urdf_artifact_file }}
     - name: Upload URDF artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.artifact_key }}
-        path: ${{ env.artifct_file }}
+        name: ${{ needs.get_derived_names.outputs.urdf_artifact_key }}
+        path: ${{ needs.get_derived_names.outputs.urdf_artifact_file }}
 
   build_docker:
     runs-on: ubuntu-latest
-    needs: [get_tag]
-    outputs:
-      tagged_image_name: ${{ steps.build_docker_image.outputs.tagged_image_name }}
-      image_file: ${{ steps.upload_docker_image.outputs.image_file }}
-      artifact_key: ${{ env.artifact_key }}
-    env:
-      tag: ${{ needs.get_tag.outputs.tag }}
-      image_name: ${{ github.repository }}
-      artifact_key: docker_image
+    needs: [get_tag, get_derived_names]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Build Docker image
       id: build_docker_image
       run: |
-        tagged_image_name=${image_name}:${tag}
+        tagged_image_name=${{ needs.get_derived_names.outputs.docker_image_name }}}:${{ needs.get_derived_names.outputs.tag }}
         docker build -t ${tagged_image_name} -f ./docker/Dockerfile .
-        echo "tagged_image_name=${tagged_image_name}" >> $GITHUB_OUTPUT
     - name: Save Docker image as tar
       id: upload_docker_image
       run: |
-        outfile_basename=$(echo ${image_name} | tr '/' '-')
-        outfile_name=${outfile_basename}-${tag}.tar
-        echo "image_file=${outfile_name}" >> $GITHUB_OUTPUT
-        docker save ${{ steps.build_docker_image.outputs.tagged_image_name }} -o ${outfile_name}
-        echo 
-
+        docker save ${{ steps.build_docker_image.outputs.tagged_image_name }} -o ${{ needs.get_derived_names.outputs.docker_image_file }}
     - name: Upload Docker image tar artifact
       uses: actions/upload-artifact@v4
       with:
         if-no-files-found: error
-        name: ${artifact_key}
-        path: ${{ steps.upload_docker_image.outputs.image_file }}
+        name: ${{ needs.get_derived_names.outputs.docker_artifact_key }}
+        path: ${{ needs.get_derived_names.outputs.docker_image_file }}
 
   create_release:
     runs-on: ubuntu-latest
-    needs: [get_tag, generate_urdf, build_docker]
+    needs: [get_derived_names, generate_urdf, build_docker]
     env:
-        tag: ${{ needs.get_tag.outputs.tag }}
-        image_name: ${{ needs.build_docker.outputs.tagged_image_name }}
-        source_archive: source_code_${tag}.tar.gz
+      source_archive: ${{ github.repository_owner }}-${{ needs.get_derived_names.outputs.repo_name }}_${{ needs.get_derived_names.outputs.tag }}_source.tar.gz
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: Download URDF artifact
       uses: actions/download-artifact@v4
       with:
-        name: ${{ needs.generate_urdf.outputs.artifact_key }}
+        name: ${{ needs.get_derived_names.outputs.urdf_artifact_key }}
     - name: Download Docker image artifact
       uses: actions/download-artifact@v4
       with:
-        name: ${{ needs.build_docker.outputs.artifact_key }}
+        name: ${{ needs.get_derived_names.outputs.docker_artifact_key }}
     - name: Archive source code
       run: |
-        git archive --format=tar.gz --output=${{ env.source_archive }} ${tag}
+        git archive --format=tar.gz --output=${{ env.source_archive }} ${{ needs.get_derived_names.outputs.tag }}
     - name: Create release
       uses: softprops/action-gh-release@v1
       with:
