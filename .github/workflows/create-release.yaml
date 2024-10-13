@@ -39,7 +39,7 @@ jobs:
           echo "urdf_artifact_file=${repo_name}.urdf" >> $GITHUB_OUTPUT
           echo "urdf_artifact_key=${repo_name}_urdf" >> $GITHUB_OUTPUT
           echo "docker_artifact_key=${repo_name}_docker" >> $GITHUB_OUTPUT
-          echo "docker_image_file=${{ github.repository_owner }}-${repo_name}_${tag}_docker.tar" >> $GITHUB_OUTPUT
+          echo "docker_image_file=${{ github.repository_owner }}-${repo_name}_${tag}_docker.tar.gz" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
   generate_urdf:
     runs-on: ubuntu-latest
@@ -81,7 +81,7 @@ jobs:
     - name: Save Docker image as tar
       id: upload_docker_image
       run: |
-        docker save ${{ steps.build_docker_image.outputs.tagged_image_name }} -o ${{ needs.get_derived_names.outputs.docker_image_file }}
+        docker save ${{ steps.build_docker_image.outputs.tagged_image_name }} | gzip > ${{ needs.get_derived_names.outputs.docker_image_file }}
     - name: Upload Docker image tar artifact
       uses: actions/upload-artifact@v4
       with:
@@ -110,10 +110,7 @@ jobs:
       with:
         name: ${{ needs.get_derived_names.outputs.docker_artifact_key }}
     - name: Archive source code
-      run: |
-        git archive --format=tar.gz --output=${{ env.source_archive }} ${{ needs.get_derived_names.outputs.tag }}
-    - name: check sizes
-      run: ls -lah
+      run: git archive --format=tar.gz --output=${{ env.source_archive }} ${{ needs.get_derived_names.outputs.tag }}
     - name: Create release
       uses: softprops/action-gh-release@v1
       with:
