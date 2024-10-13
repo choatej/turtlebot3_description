@@ -1,6 +1,11 @@
 name: Create Release
 on:
   workflow_dispatch:
+    inputs:
+        tag:
+            description: 'Tag to create release for'
+            required: true
+            default: 'v0.0.0'
   push:
     tags:
       - 'v*.*.*'
@@ -13,8 +18,12 @@ jobs:
     steps:
       - name: Get the tag
         id: get_tag
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-
+        run: |
+          if [ -n "$GITHUB_REF" ]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v0.0.0" >> $GITHUB_OUTPUT
+          fi
   generate_urdf:
     runs-on: ubuntu-latest
     container: ros:iron
@@ -22,15 +31,11 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: install dependencies
-      run: |
-        sudo apt-get update && \
-        sudo apt-get install -y \
-          ros-iron-xacro
+      run:  rosdep install --from-paths src --ignore-src -r -y
     - name: Generate URDF files
       run: |
         colcon build --packages-select turtlebot3_description
         xacro urdf/turtlebot3_burger_urdf.xacro -o turtlebot3.urdf
-        stat turtlebot3.urdf
         tar -czvf turtlebot3_urdf.tar.gz install/turtlebot3_description/
     - name: Upload URDF artifact
       uses: actions/upload-artifact@v4
@@ -43,7 +48,7 @@ jobs:
     needs: [get_tag]
     env:
       tag: ${{ needs.get_tag.outputs.tag }}
-      image_name: ${{ github.repository_owner }}/$(basename ${{ github.repository }})
+      image_name: ${{ github.repository }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -65,7 +70,7 @@ jobs:
     needs: [get_tag, generate_urdf, build_docker]
     env:
         tag: ${{ needs.get_tag.outputs.tag }}
-        image_name: ${{ github.repository_owner }}/$(basename ${{ github.repository }})
+        image_name: ${{ github.repository }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
