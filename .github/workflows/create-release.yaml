@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: install dependencies
       run: |
@@ -31,7 +31,7 @@ jobs:
         tar -czvf turtlebot3_urdf.tar.gz install/turtlebot3_description/
 
     - name: Upload URDF artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: turtlebot3_urdf
         path: turtlebot3_urdf.tar.gz
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # Build Docker image
     - name: Build Docker image
@@ -53,7 +53,7 @@ jobs:
         docker save your-docker-image-name:latest -o your-docker-image-name_${{ github.ref_name }}.tar
 
     - name: Upload Docker image tar artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: docker_image
         path: your-docker-image-name_${{ github.ref_name }}.tar
@@ -63,16 +63,16 @@ jobs:
     needs: [generate_urdf, build_docker]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     # Download artifacts from previous jobs
     - name: Download URDF artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: turtlebot3_urdf
 
     - name: Download Docker image artifact
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: docker_image
 
