@@ -39,7 +39,7 @@ jobs:
       run: |
         source /opt/ros/iron/setup.bash
         colcon build --packages-select turtlebot3_description
-        xacro urdf/turtlebot3_burger_urdf.xacro -o turtlebot3.urdf
+        xacro src/turtlebot3_description/urdf/turtlebot3_burger_urdf.xacro -o turtlebot3.urdf
         tar -czvf turtlebot3_urdf.tar.gz install/turtlebot3_description/
     - name: Upload URDF artifact
       uses: actions/upload-artifact@v4
