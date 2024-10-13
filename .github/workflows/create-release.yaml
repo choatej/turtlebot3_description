@@ -33,7 +33,11 @@ jobs:
       with:
         path: src
     - name: install dependencies
-      run:  rosdep update && rosdep install --from-paths src -r -y
+      run:  sudo apt-get update && rosdep update && rosdep install --from-paths src -r -y
+#      run: |
+#        sudo apt-get update && \
+#        sudo apt-get install -y \
+#          ros-iron-xacro
     - name: Generate URDF files
       run: |
         colcon build --packages-select turtlebot3_description
