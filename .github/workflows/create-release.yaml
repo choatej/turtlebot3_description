@@ -35,6 +35,7 @@ jobs:
     - name: install dependencies
       run:  sudo apt-get update && rosdep update && rosdep install --from-paths src -r -y
     - name: Generate URDF files
+      shell: bash
       run: |
         source /opt/ros/iron/setup.bash
         colcon build --packages-select turtlebot3_description
