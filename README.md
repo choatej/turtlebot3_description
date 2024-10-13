@@ -1,8 +1,8 @@
 # Turtlebot3 Robot Description in ROS2/RVIZ2
 
-![Build Status](https://github.com/choatej/turtlebot3_description/actions/workflows/ci.yml/badge.svg)
+![Build Status](https://github.com/choatej/turtlebot3_description/actions/workflows/ros-ci.yaml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![ROS2 Distro](https://img.shields.io/badge/ROS2-Foxy-blue)
+![ROS2 Distro](https://img.shields.io/badge/ROS2-Iron-silver)
 ![GitHub version](https://img.shields.io/github/v/tag/choatej/turtlebot3_description?label=version)
 
 This project is adapting the ROS1 turtlebot project and moving parts of it to ROS2
