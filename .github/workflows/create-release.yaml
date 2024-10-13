@@ -66,7 +66,7 @@ jobs:
 
   build_docker:
     runs-on: ubuntu-latest
-    needs: [get_tag, get_derived_names]
+    needs: [get_derived_names, get_derived_names]
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
