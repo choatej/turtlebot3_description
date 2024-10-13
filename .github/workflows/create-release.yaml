@@ -27,12 +27,11 @@ jobs:
       - name: Derive Names
         id: derive_names
         run: |
+          tag="v0.0.0"
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=v0.0.0" >> $GITHUB_OUTPUT
+            tag=${GITHUB_REF#refs/tags/}
           fi
-          
+          echo "tag=${tag}" >> $GITHUB_OUTPUT
           repo_name=$(echo "${{ github.repository }}" | sed -e 's/.*\///g')
           echo "repo_name=${repo_name}" >> $GITHUB_OUTPUT
           echo "urdf_artifact_file=${repo_name}_urdf.tar.gz" >> $GITHUB_OUTPUT
