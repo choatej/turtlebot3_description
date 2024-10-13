@@ -30,8 +30,10 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        path: src
     - name: install dependencies
-      run:  rosdep update && rosdep install --from-paths src --ignore-src -r -y
+      run:  rosdep init && rosdep update && rosdep install --from-paths src -r -y
     - name: Generate URDF files
       run: |
         colcon build --packages-select turtlebot3_description
@@ -57,7 +59,8 @@ jobs:
         docker build -t ${image_name}:${tag} -f ./docker/Dockerfile .
     - name: Save Docker image as tar
       run: |
-        docker save ${image_name}:${tag} -o ${image_name}_${tag}.tar
+        outfile=$(echo ${image_name} | tr '/' '-')
+        docker save ${image_name}:${tag} -o ${outfile}-${tag}.tar
 
     - name: Upload Docker image tar artifact
       uses: actions/upload-artifact@v4
