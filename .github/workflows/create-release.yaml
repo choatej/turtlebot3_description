@@ -62,6 +62,7 @@ jobs:
     - name: Upload URDF artifact
       uses: actions/upload-artifact@v4
       with:
+        if-no-files-found: error
         name: ${{ needs.get_derived_names.outputs.urdf_artifact_key }}
         path: ${{ needs.get_derived_names.outputs.urdf_artifact_file }}
 
@@ -98,10 +99,8 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-tags: true
-    - name: double fetch tags
+    - name: fetch tags # This is a workaround for the issue with the checkout action not fetching tags
       run: git fetch --tags
-    - name: view tags
-      run: git tag
     - name: Download URDF artifact
       uses: actions/download-artifact@v4
       with:
@@ -116,11 +115,10 @@ jobs:
     - name: Create release
       uses: softprops/action-gh-release@v1
       with:
-        make_latest: true
         tag_name: ${{ needs.get_derived_names.outputs.tag }}
         files: |
-          ${{ needs.generate_urdf.outputs.artifact_file }}
+          ${{ needs.get_derived_names.outputs.docker_image_file }}
           ${{ env.source_archive }}
-          ${{ needs.build_docker.outputs.image_file }}
+          ${{ needs.get_derived_names.outputs.urdf_artifact_file }}
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_BUILDER_TOKEN }}
