@@ -112,6 +112,8 @@ jobs:
     - name: Archive source code
       run: |
         git archive --format=tar.gz --output=${{ env.source_archive }} ${{ needs.get_derived_names.outputs.tag }}
+    - name: check sizes
+      run: ls -lah
     - name: Create release
       uses: softprops/action-gh-release@v1
       with:
