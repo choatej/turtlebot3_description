@@ -30,6 +30,8 @@ jobs:
           tag="v0.0.0"
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             tag=${GITHUB_REF#refs/tags/}
+          elif [ -n "${{ github.event.inputs.tag }}" ]; then
+            tag=${{ github.event.inputs.tag }}
           fi
           echo "tag=${tag}" >> $GITHUB_OUTPUT
           repo_name=$(echo "${{ github.repository }}" | sed -e 's/.*\///g')
