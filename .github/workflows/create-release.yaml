@@ -19,7 +19,7 @@ jobs:
           ros-iron-xacro
 
     - name: setup ROS
-      uses: ros-tooling/action-ros-setup@v0.1
+      uses: ros-tooling/ros-tooling/setup-ros@v0.7
       with:
         required-ros-distributions: iron
 
@@ -45,7 +45,7 @@ jobs:
     # Build Docker image
     - name: Build Docker image
       run: |
-        docker build -t your-docker-image-name:latest .
+        docker build -t  IMAGE_NAME=${{ github.repository_owner }}/$(basename ${{ github.repository }}):${GITHUB_REF#refs/tags/} -f ./docker/Dockerfile .
 
     # Save Docker image to a tar file
     - name: Save Docker image as tar
