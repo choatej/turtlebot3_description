@@ -27,7 +27,7 @@ jobs:
   generate_urdf:
     runs-on: ubuntu-latest
     container: ros:iron
-    output:
+    outputs:
         artifact_key: ${{ env.artifact_key }}
         artifact_file: ${{ env.artifact_file }}
     env:
