@@ -36,5 +36,6 @@ jobs:
     - name: Lint with ament
       uses: ros-tooling/action-ros-lint@v0.1
       with:
+        distribution: iron
         linter: flake8
         package-name: turtlebot3_description
