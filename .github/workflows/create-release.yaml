@@ -19,7 +19,7 @@ jobs:
       - name: Get the tag
         id: get_tag
         run: |
-          if [ -n "$GITHUB_REF" ]; then
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           else
             echo "tag=v0.0.0" >> $GITHUB_OUTPUT
@@ -31,7 +31,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     - name: install dependencies
-      run:  rosdep install --from-paths src --ignore-src -r -y
+      run:  rosdep update && rosdep install --from-paths src --ignore-src -r -y
     - name: Generate URDF files
       run: |
         colcon build --packages-select turtlebot3_description
