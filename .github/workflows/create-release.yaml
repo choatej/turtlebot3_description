@@ -116,6 +116,8 @@ jobs:
     - name: Create release
       uses: softprops/action-gh-release@v1
       with:
+        make_latest: true
+        tag_name: ${{ needs.get_derived_names.outputs.tag }}
         files: |
           ${{ needs.generate_urdf.outputs.artifact_file }}
           ${{ env.source_archive }}
