@@ -16,7 +16,7 @@ jobs:
     outputs:
         tag: ${{ steps.derive_names.outputs.tag }}
         repo_name: ${{ steps.derive_names.outputs.repo_name }}
-        urdf_source_file_path: src/${{ steps.derive_names.outputs.repo_name }}/${{ env.urdf_file_name }}
+        urdf_source_file_path: src/${{ steps.derive_names.outputs.repo_name }}/${{ env.urdf_file_path }}
         urdf_artifact_file: ${{ steps.derive_names.outputs.urdf_artifact_file }}
         urdf_artifact_key: ${{ steps.derive_names.outputs.urdf_artifact_key }}
         docker_artifact_key: ${{ steps.derive_names.outputs.docker_artifact_key }}
@@ -74,6 +74,7 @@ jobs:
       run: |
         tagged_image_name=${{ needs.get_derived_names.outputs.docker_image_name }}:${{ needs.get_derived_names.outputs.tag }}
         docker build -t ${tagged_image_name} -f ./docker/Dockerfile .
+        echo "tagged_image_name=${tagged_image_name}" >> $GITHUB_OUTPUT
     - name: Save Docker image as tar
       id: upload_docker_image
       run: |
