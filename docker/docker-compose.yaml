@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  gazebo_rviz:
+    image: choatej/turtlebot3_description:latest
+    environment:
+      - DISPLAY=${DISPLAY}
+      - XAUTHORITY=${XAUTHORITY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${XAUTHORITY}:${XAUTHORITY}
+    devices:
+      - /dev/dri:/dev/dri
+    network_mode: "host"
+    privileged: true
+    ipc: host
