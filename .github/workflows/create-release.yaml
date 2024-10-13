@@ -31,7 +31,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        path: src
+        path: src/turtlebot3_description
     - name: install dependencies
       run:  sudo apt-get update && rosdep update && rosdep install --from-paths src -r -y
     - name: Generate URDF files
