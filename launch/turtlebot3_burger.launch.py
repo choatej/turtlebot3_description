@@ -1,16 +1,17 @@
+import datetime
 import logging
 import os
 from os import PathLike
-import datetime
+
+import xacro
+from ament_index_python.packages import get_package_prefix
 from ament_index_python.packages import get_package_share_directory
-from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from ament_index_python.packages import get_package_prefix
 
-import xacro
+from launch import LaunchDescription
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
 logging.basicConfig(level=log_level)
@@ -38,15 +39,13 @@ def process_xacro_file(xacro_file: PathLike) -> str:
 def set_gazebo_env_vars():
     gazebo_models_path = os.path.join(package_name, 'urdf')
     if 'GAZEBO_MODEL_PATH' in os.environ:
-        os.environ['GAZEBO_MODEL_PATH'] = os.environ['GAZEBO_MODEL_PATH'] + \
-                                          ':' + install_dir + '/share' + ':' + gazebo_models_path
+        os.environ['GAZEBO_MODEL_PATH'] = os.environ[
+                                              'GAZEBO_MODEL_PATH'] + ':' + install_dir + '/share' + ':' + gazebo_models_path
     else:
-        os.environ['GAZEBO_MODEL_PATH'] = install_dir + \
-                                          '/share' + ':' + gazebo_models_path
+        os.environ['GAZEBO_MODEL_PATH'] = install_dir + '/share' + ':' + gazebo_models_path
 
     if 'GAZEBO_PLUGIN_PATH' in os.environ:
-        os.environ['GAZEBO_PLUGIN_PATH'] = os.environ['GAZEBO_PLUGIN_PATH'] + \
-                                           ':' + install_dir + '/lib'
+        os.environ['GAZEBO_PLUGIN_PATH'] = os.environ['GAZEBO_PLUGIN_PATH'] + ':' + install_dir + '/lib'
     else:
         os.environ['GAZEBO_PLUGIN_PATH'] = install_dir + '/lib'
 
@@ -63,35 +62,20 @@ def generate_robot_state_publisher_node():
     with open(outfile_file, 'w') as f:
         f.write(urdf_text)
 
-    return Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        parameters=[{'use_sim_time': use_sim_time, 'robot_description': urdf_text}],
-        output='screen'
-    )
+    return Node(package='robot_state_publisher', executable='robot_state_publisher', name='robot_state_publisher',
+        parameters=[{'use_sim_time': use_sim_time, 'robot_description': urdf_text}], output='screen')
 
 
 def generate_robot_spawn():
     logging.debug('robot spawn topic is robot_description')
-    return Node(
-        name='spawn_entity',
-        package='gazebo_ros',
-        executable='spawn_entity.py',
-        arguments=['-entity', robot_name, '-x', x, '-y', y, '-z', z, '-topic', 'robot_description']
-    )
+    return Node(name='spawn_entity', package='gazebo_ros', executable='spawn_entity.py',
+        arguments=['-entity', robot_name, '-x', x, '-y', y, '-z', z, '-topic', 'robot_description'])
 
 
 def genrate_static_transform_publisher_node(world_frame):
     logging.debug('creating static transform')
-    return Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        name='static_transform_publisher_odom',
-        output='screen',
-        emulate_tty=True,
-        arguments=[x, y, z, '0', '0', '0', world_frame, 'base_link']
-    )
+    return Node(package='tf2_ros', executable='static_transform_publisher', name='static_transform_publisher_odom',
+        output='screen', emulate_tty=True, arguments=[x, y, z, '0', '0', '0', world_frame, 'base_link'])
 
 
 def generate_launch_description():
@@ -103,27 +87,13 @@ def generate_launch_description():
     logging.info(f'world file: {full_world_path}')
     logging.debug('creating launch description')
     launch_description_items = [
-        DeclareLaunchArgument(
-            'world',
-            default_value=full_world_path,
-            description='Path to the Gazebo world file'
-        ),
-        LogInfo(msg='Launching gazebo.'),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [os.path.join(get_package_share_directory('gazebo_ros'), 'launch'), '/gazebo.launch.py']),
-            launch_arguments={
-                'verbose': 'false',
-                'pause': 'false',
-                'world': LaunchConfiguration('world'),
-            }.items(),
-        ),
-    ]
+        DeclareLaunchArgument('world', default_value=full_world_path, description='Path to the Gazebo world file'),
+        LogInfo(msg='Launching gazebo.'), IncludeLaunchDescription(PythonLaunchDescriptionSource(
+            [os.path.join(get_package_share_directory('gazebo_ros'), 'launch'), '/gazebo.launch.py']),
+            launch_arguments={'verbose': 'false', 'pause': 'false',
+                'world': LaunchConfiguration('world'), }.items(), ), ]
     logging.debug('created base launch config, now appending stuff')
-    delayed_start = TimerAction(
-        actions=[],
-        period=5.0
-    )
+    delayed_start = TimerAction(actions=[], period=5.0)
     launch_description_items.append(LogInfo(msg='Gazebo started. Launching robot nodes.'))
     launch_description_items.append(delayed_start)
     logging.debug('appended delay start')
