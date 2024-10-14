@@ -102,7 +102,8 @@ jobs:
     - name: Save Docker image as tar
       id: save_docker_image
       run: |
-        docker save ${{ steps.build_docker_image.outputs.tagged_image_name }} | gzip > ${{ needs.get_derived_names.outputs.docker_image_file }}
+        docker save ghcr.io/${{ steps.build_docker_image.outputs.tagged_image_name }} | gzip > ${{ needs.get_derived_names.outputs.docker_image_file }}
+        ls -lah ${{ needs.get_derived_names.outputs.docker_image_file }}
     - name: Upload Docker image tar artifact
       id: upload_image_artifact
       uses: actions/upload-artifact@v4
