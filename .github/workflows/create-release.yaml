@@ -129,10 +129,7 @@ jobs:
         if-no-files-found: error
         name: ${{ needs.get_derived_names.outputs.docker_artifact_key }}
         path: ${{ needs.get_derived_names.outputs.docker_image_file }}
-    - name: Get asset URL
-      id: get_asset_url
-      run: |
-        echo "artifact url: ${{ steps.upload_image_artifact.outputs.artifact_url }}"
+
   create_release:
     if: ${{ github.event.inputs.dry-run != 'true' }}
     runs-on: ubuntu-latest
