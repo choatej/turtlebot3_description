@@ -42,7 +42,6 @@ jobs:
           echo "docker_image_file=${{ github.repository_owner }}-${repo_name}_${tag}_docker.tar.gz" >> $GITHUB_OUTPUT
           cat $GITHUB_OUTPUT
   generate_urdf:
-    if: false
     runs-on: ubuntu-latest
     needs: [get_derived_names]
     container: ros:iron
@@ -116,7 +115,6 @@ jobs:
       run: |
         echo "artifact url: ${{ steps.upload_image_artifact.outputs.artifact_url }}"
   create_release:
-    if: false
     runs-on: ubuntu-latest
     needs: [get_derived_names, generate_urdf, build_docker]
     env:
