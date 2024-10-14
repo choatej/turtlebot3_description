@@ -6,6 +6,19 @@ on:
             description: 'Tag to create release for'
             required: true
             default: 'v0.0.0'
+        dry-run:
+            description: 'Do not create the release, just take all the steps up to that point'
+            required: false
+            default: 'false'
+        release_type:
+            description: 'Type of release to create'
+            required: false
+            default: 'pre-release'
+            options:
+                - 'release'
+                - 'pre-release'
+                - 'draft'
+
   push:
     tags:
       - 'v*.*.*'
@@ -108,6 +121,7 @@ jobs:
         path: ${{ needs.get_derived_names.outputs.docker_image_file }}
 
   create_release:
+    if: ${{ github.event.inputs.dry-run != 'true' }}
     runs-on: ubuntu-latest
     needs: [get_derived_names, generate_urdf, build_docker]
     env:
@@ -137,5 +151,10 @@ jobs:
           ${{ needs.get_derived_names.outputs.docker_image_file }}
           ${{ env.source_archive }}
           ${{ needs.get_derived_names.outputs.urdf_artifact_file }}
+        prerelease: ${{ github.event.inputs.release_type == 'pre-release' }}
+        draft: ${{ github.event.inputs.release_type == 'draft' }}
+        generate_release_notes: ${{ github.event.inputs.release_type != 'draft' }}
+        make_latest: ${{ github.event.inputs.release_type == 'release' }}
+        fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.RELEASE_BUILDER_TOKEN }}
