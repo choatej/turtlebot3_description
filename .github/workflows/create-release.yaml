@@ -111,7 +111,7 @@ jobs:
     - name: Get asset URL
       id: get_asset_url
       run: |
-        echo "artifact url: ${{ steps.upload_docker_image.outputs.artifact_url }}"
+        echo "artifact url: ${{ steps.upload_image_artifact.outputs.artifact_url }}"
   create_release:
     if: false
     runs-on: ubuntu-latest
