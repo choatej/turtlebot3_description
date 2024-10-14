@@ -84,7 +84,9 @@ jobs:
       id: build_docker_image
       run: |
         tagged_image_name=${{ needs.get_derived_names.outputs.docker_image_name }}:${{ github.sha }}
-        docker build -t ghcr.io/${{ github.repository_owner }}/${{  needs.get_derived_names.outputs.docker_image_name }}:${{ github.sha }} -f ./docker/Dockerfile .
+        echo "tagged image name: ${tagged_image_name}"
+        echo "tagged_image_name=${tagged_image_name}" >> $GITHUB_OUTPUT
+        docker build -t ghcr.io/${tagged_image_name} -f ./docker/Dockerfile .
     - name: Log in to GHCR
       run: echo "${{ secrets.RELEASE_BUILDER_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
     - name: Tag Docker image
@@ -98,7 +100,7 @@ jobs:
     - name: Push Docker image (version tag)
       run: docker push ghcr.io/${{ github.repository_owner }}/${{  needs.get_derived_names.outputs.docker_image_name }}:${{ needs.get_derived_names.outputs.tag }}
     - name: Save Docker image as tar
-      id: upload_docker_image
+      id: save_docker_image
       run: |
         docker save ${{ steps.build_docker_image.outputs.tagged_image_name }} | gzip > ${{ needs.get_derived_names.outputs.docker_image_file }}
     - name: Upload Docker image tar artifact
