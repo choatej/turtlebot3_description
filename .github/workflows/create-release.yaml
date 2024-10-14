@@ -83,7 +83,7 @@ jobs:
     - name: Build Docker image
       id: build_docker_image
       run: |
-        tagged_image_name=${{ needs.get_derived_names.outputs.docker_image_name }}:${{ github.sha }}
+        tagged_image_name=${{ github.repository_owner }}/${{ needs.get_derived_names.outputs.docker_image_name }}:${{ github.sha }}
         echo "tagged image name: ${tagged_image_name}"
         echo "tagged_image_name=${tagged_image_name}" >> $GITHUB_OUTPUT
         docker build -t ghcr.io/${tagged_image_name} -f ./docker/Dockerfile .
